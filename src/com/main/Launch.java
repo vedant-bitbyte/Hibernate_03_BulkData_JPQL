@@ -17,11 +17,11 @@ public class Launch {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("config");
 		EntityManager em = emf.createEntityManager();
 		
-		// In here we used the native sql query, which means that we write the query with reference to the DB parameters,
-		// not the entity
+		// In here we used the java persistence query language (JPQL), which means that we write the query with reference to
+		// the entity
 //		insert(em);
-		read(em);
-		update(em);
+//		read(em);
+//		update(em);
 		delete(em);
 		
 		em.close();
@@ -34,12 +34,12 @@ public class Launch {
 		EntityTransaction transaction = em.getTransaction();
 		transaction.begin();
 		
-		String sql = "delete from xemployee where id >= ?";
+		String sql = "delete from Employee where eid >= :eid";
 		
-		Query nativeQuery = em.createNativeQuery(sql);
-		nativeQuery.setParameter(1, 1237);
+		Query query = em.createQuery(sql);
+		query.setParameter("eid", 1237);
 		
-		nativeQuery.executeUpdate();
+		query.executeUpdate();
 		
 		transaction.commit();
 		System.out.println("Bulk data deleted...");
@@ -50,13 +50,15 @@ public class Launch {
 		EntityTransaction transaction = em.getTransaction();
 		transaction.begin();
 		
-		String sql = "update xemployee set salary = ? where id >= ?";
+		// here the esalary and eid are the Employee entity's parameters
+		// Also here we used named parameters (:esalary, :eid) instead of positional parameters (?)
+		String sql = "update Employee set esalary = :esalary where eid >= :eid";
 		
-		Query nativeQuery = em.createNativeQuery(sql);
-		nativeQuery.setParameter(1, 9888);
-		nativeQuery.setParameter(2, 1235);
+		Query query = em.createQuery(sql);
+		query.setParameter("esalary", 9888); // so here we mentioned the named parameter
+		query.setParameter("eid", 1235);
 		
-		nativeQuery.executeUpdate();
+		query.executeUpdate();
 		
 		transaction.commit();
 		System.out.println("Bulk data updates...");
@@ -67,23 +69,14 @@ public class Launch {
 		EntityTransaction transaction = em.getTransaction();
 		transaction.begin();
 		
-		String sql = "select * from xemployee;";
-		
-		// Here we are getting a List of Object[], which means an Obj for every parameter added into an Array, this is for every row
-		// then, a list<obj[]> is given to us
-//		Query nativeQuery = em.createNativeQuery(sql);
-//		List<Object[]> resultList = nativeQuery.getResultList();
-//		
-//		for (Object[] orr : resultList) {
-//			for (Object o : orr) {
-//				System.out.print(o + " ");
-//			}
-//			System.out.println();
-//		}
+		String sql = "select e from Employee e";
+		// This is the JPQL, here we wrote the query using the entity class parameters, like the Employee is the class name
+		// And compulsory we need to provide alias, here is e
 		
 		// now here we pass the Entity Employee, so the data is binded into the Employee obj
-		Query nativeQuery = em.createNativeQuery(sql, Employee.class);
-		List<Employee> resultList = nativeQuery.getResultList();
+		// Here we used .createQuery()
+		Query query = em.createQuery(sql, Employee.class);
+		List<Employee> resultList = query.getResultList();
 		
 		for (Employee emp : resultList) {
 			System.out.println(emp);
@@ -99,6 +92,7 @@ public class Launch {
 		EntityTransaction transaction = em.getTransaction();
 		transaction.begin();
 		
+		// So JPQL does not have a query to insert data, so we do it using the SQL native or JPA persist
 		String sql = "insert into xemployee(id, name, address, salary) values (?,?,?,?);";
 		
 		// loop to represent a bulk insertion
